@@ -36,7 +36,7 @@ export function createManifestProvider(config: Config, fetchImpl: typeof fetch =
 
     if (!res.ok) {
       if (cached && res.status >= 500) return cached.body;
-      throw new ManifestError(describeStatus(res.status, url));
+      throw new ManifestError(describeStatus(res.status, url, Object.keys(config.headers).length > 0));
     }
 
     const text = await res.text();
@@ -79,9 +79,13 @@ export function createManifestProvider(config: Config, fetchImpl: typeof fetch =
   return (_request: Request | undefined, path: string) => load(path);
 }
 
-function describeStatus(status: number, url: string): string {
+function describeStatus(status: number, url: string, hasAuthHeader: boolean): string {
   if (status === 401 || status === 403) {
-    return `${url} returned ${status}. The Storybook is private: set STORYBOOK_AUTH_HEADER on the connector's Environment variables tab.`;
+    // Some hosts (S3, CloudFront) also answer 403 for a file that doesn't exist.
+    const auth = hasAuthHeader
+      ? "check that STORYBOOK_AUTH_HEADER is still valid"
+      : "if the Storybook is private, set STORYBOOK_AUTH_HEADER on the connector's Environment variables tab";
+    return `${url} returned ${status}. Access was denied or the file doesn't exist: ${auth}, and check that STORYBOOK_URL points at the Storybook root.`;
   }
   if (status === 404) {
     return `${url} returned 404. The Storybook has no components manifest: it needs Storybook 10.x with features.componentsManifest enabled, rebuilt and republished.`;

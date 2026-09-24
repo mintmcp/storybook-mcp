@@ -94,6 +94,9 @@ test("private Storybook: auth header required, sent when set", async () => {
   const denied = await callTool({ STORYBOOK_URL: `${base}/private` }, "docs-list");
   assert.equal(denied.isError, true);
   assert.match(denied.text, /STORYBOOK_AUTH_HEADER/);
+  const wrong = await callTool({ STORYBOOK_URL: `${base}/private`, STORYBOOK_AUTH_HEADER: "Bearer nope" }, "docs-list");
+  assert.equal(wrong.isError, true);
+  assert.match(wrong.text, /STORYBOOK_AUTH_HEADER is still valid/);
   const ok = await callTool({ STORYBOOK_URL: `${base}/private`, STORYBOOK_AUTH_HEADER: "Authorization: Bearer s3cret" }, "docs-list");
   assert.equal(ok.isError, false, ok.text);
 });
