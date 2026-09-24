@@ -4,6 +4,7 @@ import type { Config } from "./config.js";
 
 const CACHE_TTL_MS = 60_000;
 const FETCH_TIMEOUT_MS = 15_000;
+const MAX_REDIRECTS = 5;
 
 /** Keys stripped from manifests: absolute paths from the machine that built the Storybook. */
 const SCRUBBED_KEYS = new Set(["definedInFile"]);
@@ -25,12 +26,9 @@ export function createManifestProvider(config: Config, fetchImpl: typeof fetch =
 
     let res: Response;
     try {
-      res = await fetchImpl(url, {
-        headers: { accept: "application/json", ...config.headers },
-        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-        redirect: "follow",
-      });
+      res = await fetchSameOrigin(url);
     } catch (err) {
+      if (err instanceof ManifestError) throw err;
       // Serve the last good copy if the Storybook host is briefly unreachable.
       if (cached) return cached.body;
       throw new ManifestError(`Could not reach ${url}: ${err instanceof Error ? err.message : String(err)}`);
@@ -53,6 +51,29 @@ export function createManifestProvider(config: Config, fetchImpl: typeof fetch =
     }
     cache.set(url, { body, fetchedAt: Date.now() });
     return body;
+  }
+
+  // Follows redirects only within the Storybook's origin, so STORYBOOK_AUTH_HEADER never leaves it.
+  async function fetchSameOrigin(url: string): Promise<Response> {
+    const origin = new URL(config.storybookUrl).origin;
+    let current = url;
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+      const res = await fetchImpl(current, {
+        headers: { accept: "application/json", ...config.headers },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+        redirect: "manual",
+      });
+      const location = res.status >= 300 && res.status < 400 ? res.headers.get("location") : null;
+      if (!location) return res;
+      const next = new URL(location, current);
+      if (next.origin !== origin) {
+        throw new ManifestError(
+          `${url} redirects to ${next.origin}, outside STORYBOOK_URL. Set STORYBOOK_URL to the address the Storybook is actually served from.`,
+        );
+      }
+      current = next.toString();
+    }
+    throw new ManifestError(`${url} redirected more than ${MAX_REDIRECTS} times.`);
   }
 
   return (_request: Request | undefined, path: string) => load(path);

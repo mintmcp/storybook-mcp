@@ -15,6 +15,7 @@ const DOCS = fixture("docs.json");
 // Fake Storybook hosts, one per scenario, keyed by path prefix.
 let host;
 let base;
+const leakedHeaders = [];
 before(async () => {
   host = http.createServer((req, res) => {
     const [, scenario, ...rest] = req.url.split("/");
@@ -29,6 +30,17 @@ before(async () => {
       if (req.headers.authorization !== "Bearer s3cret") return res.writeHead(401).end();
       if (path === "manifests/components.json") return json(COMPONENTS);
       if (path === "manifests/docs.json") return json(DOCS);
+    }
+    if (scenario === "moved") {
+      return res.writeHead(301, { location: `/public/${path}` }).end();
+    }
+    if (scenario === "offsite") {
+      // Records whether the auth header followed a cross-origin redirect.
+      return res.writeHead(302, { location: `http://localhost:${host.address().port}/leak/${path}` }).end();
+    }
+    if (scenario === "leak") {
+      leakedHeaders.push(req.headers["x-sb-token"]);
+      return json(COMPONENTS);
     }
     if (scenario === "loginpage") {
       return res.writeHead(200, { "content-type": "text/html" }).end("<html>Sign in</html>");
@@ -90,6 +102,18 @@ test("no manifest: explains the Storybook requirement", async () => {
   const res = await callTool({ STORYBOOK_URL: `${base}/old` }, "docs-list");
   assert.equal(res.isError, true);
   assert.match(res.text, /componentsManifest/);
+});
+
+test("same-origin redirects are followed", async () => {
+  const list = await callTool({ STORYBOOK_URL: `${base}/moved` }, "docs-list");
+  assert.equal(list.isError, false, list.text);
+});
+
+test("cross-origin redirect is refused and the auth header is not sent", async () => {
+  const res = await callTool({ STORYBOOK_URL: `${base}/offsite`, STORYBOOK_AUTH_HEADER: "X-SB-Token: s3cret" }, "docs-list");
+  assert.equal(res.isError, true);
+  assert.match(res.text, /outside STORYBOOK_URL/);
+  assert.deepEqual(leakedHeaders, []);
 });
 
 test("HTML instead of JSON: points at URL or auth", async () => {
