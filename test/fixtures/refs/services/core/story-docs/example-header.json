@@ -1,0 +1,22 @@
+{
+  "components": {
+    "example-header": {
+      "id": "example-header",
+      "name": "Header",
+      "path": "./src/stories/Header.stories.ts",
+      "import": "import { Header } from 'storybook-manifest-check';\nimport { fn } from 'storybook/test';",
+      "stories": {
+        "example-header--logged-in": {
+          "id": "example-header--logged-in",
+          "name": "Logged In",
+          "snippet": "const LoggedIn = () => <Header\n    onLogin={fn()}\n    onLogout={fn()}\n    onCreateAccount={fn()}\n    user={{\n      name: 'Jane Doe',\n    }} />;"
+        },
+        "example-header--logged-out": {
+          "id": "example-header--logged-out",
+          "name": "Logged Out",
+          "snippet": "const LoggedOut = () => <Header onLogin={fn()} onLogout={fn()} onCreateAccount={fn()} />;"
+        }
+      }
+    }
+  }
+}

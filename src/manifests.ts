@@ -3,59 +3,88 @@
 import type { Config } from "./config.js";
 
 const CACHE_TTL_MS = 60_000;
+/** How long a failure (or a stale copy served during an outage) is reused before fetching again. */
+const RETRY_AFTER_MS = 30_000;
 const FETCH_TIMEOUT_MS = 15_000;
 const MAX_REDIRECTS = 5;
+const COMPONENTS_MANIFEST = "manifests/components.json";
 
 /** Keys stripped from manifests: absolute paths from the machine that built the Storybook. */
 const SCRUBBED_KEYS = new Set(["definedInFile"]);
 
-export class ManifestError extends Error {}
+export class ManifestError extends Error {
+  /** True for outages (network error, timeout, 5xx), where a cached copy may still be served. */
+  readonly transient: boolean;
+  constructor(message: string, transient = false) {
+    super(message);
+    this.transient = transient;
+  }
+}
 
 interface CacheEntry {
-  body: string;
-  fetchedAt: number;
+  body?: string;
+  error?: ManifestError;
+  expiresAt: number;
+  /** Fetch in progress, shared by concurrent callers. */
+  pending?: Promise<string>;
 }
 
 export function createManifestProvider(config: Config, fetchImpl: typeof fetch = fetch) {
   const cache = new Map<string, CacheEntry>();
+  const origin = new URL(config.storybookUrl).origin;
+  const hasAuthHeader = Object.keys(config.headers).length > 0;
 
-  async function load(path: string): Promise<string> {
-    const url = `${config.storybookUrl}/${path.replace(/^\.?\/+/, "")}`;
-    const cached = cache.get(url);
-    if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) return cached.body;
+  function load(rawPath: string): Promise<string> {
+    const path = rawPath.replace(/^\.?\/+/, "");
+    const url = `${config.storybookUrl}/${path}`;
+    const entry = cache.get(url);
+    if (entry && Date.now() < entry.expiresAt) {
+      return entry.body !== undefined ? Promise.resolve(entry.body) : Promise.reject(entry.error);
+    }
+    if (entry?.pending) return entry.pending;
 
-    let res: Response;
+    const pending = refresh(url, path, entry?.body);
+    cache.set(url, { ...entry, expiresAt: entry?.expiresAt ?? 0, pending });
+    return pending;
+  }
+
+  async function refresh(url: string, path: string, staleBody: string | undefined): Promise<string> {
     try {
-      res = await fetchSameOrigin(url);
+      const body = await fetchManifest(url, path);
+      cache.set(url, { body, expiresAt: Date.now() + CACHE_TTL_MS });
+      return body;
     } catch (err) {
-      if (err instanceof ManifestError) throw err;
-      // Serve the last good copy if the Storybook host is briefly unreachable.
-      if (cached) return cached.body;
-      throw new ManifestError(`Could not reach ${url}: ${err instanceof Error ? err.message : String(err)}`);
+      const error =
+        err instanceof ManifestError
+          ? err
+          : new ManifestError(`Could not reach ${url}: ${err instanceof Error ? err.message : String(err)}`, true);
+      // During an outage keep serving the last good copy, without waiting on the host for every call.
+      if (staleBody !== undefined && error.transient) {
+        cache.set(url, { body: staleBody, expiresAt: Date.now() + RETRY_AFTER_MS });
+        return staleBody;
+      }
+      cache.set(url, { error, expiresAt: Date.now() + RETRY_AFTER_MS });
+      throw error;
     }
+  }
 
-    if (!res.ok) {
-      if (cached && res.status >= 500) return cached.body;
-      throw new ManifestError(describeStatus(res.status, url, Object.keys(config.headers).length > 0));
-    }
+  async function fetchManifest(url: string, path: string): Promise<string> {
+    const res = await fetchSameOrigin(url);
+    if (!res.ok) throw new ManifestError(describeStatus(res.status, url, path, hasAuthHeader), res.status >= 500);
 
     const text = await res.text();
-    let body: string;
     try {
-      body = JSON.stringify(scrub(JSON.parse(text)));
+      return JSON.stringify(scrub(JSON.parse(text)));
     } catch {
       // An HTML login page or SPA fallback instead of JSON usually means auth or a wrong URL.
       throw new ManifestError(
         `${url} did not return JSON. Check that STORYBOOK_URL points at the Storybook root and, if the Storybook is private, that STORYBOOK_AUTH_HEADER is set.`,
       );
     }
-    cache.set(url, { body, fetchedAt: Date.now() });
-    return body;
   }
 
   // Follows redirects only within the Storybook's origin, so STORYBOOK_AUTH_HEADER never leaves it.
   async function fetchSameOrigin(url: string): Promise<Response> {
-    const origin = new URL(config.storybookUrl).origin;
     let current = url;
     for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
       const res = await fetchImpl(current, {
@@ -79,7 +108,7 @@ export function createManifestProvider(config: Config, fetchImpl: typeof fetch =
   return (_request: Request | undefined, path: string) => load(path);
 }
 
-function describeStatus(status: number, url: string, hasAuthHeader: boolean): string {
+function describeStatus(status: number, url: string, path: string, hasAuthHeader: boolean): string {
   if (status === 401 || status === 403) {
     // Some hosts (S3, CloudFront) also answer 403 for a file that doesn't exist.
     const auth = hasAuthHeader
@@ -88,7 +117,9 @@ function describeStatus(status: number, url: string, hasAuthHeader: boolean): st
     return `${url} returned ${status}. Access was denied or the file doesn't exist: ${auth}, and check that STORYBOOK_URL points at the Storybook root.`;
   }
   if (status === 404) {
-    return `${url} returned 404. The Storybook has no components manifest: it needs Storybook 10.x with features.componentsManifest enabled, rebuilt and republished.`;
+    return path === COMPONENTS_MANIFEST
+      ? `${url} returned 404. The Storybook has no components manifest: it needs Storybook 10.x with features.componentsManifest enabled, rebuilt and republished.`
+      : `${url} returned 404. The manifest refers to this file but it isn't published: republish the complete Storybook build.`;
   }
   return `${url} returned HTTP ${status}.`;
 }

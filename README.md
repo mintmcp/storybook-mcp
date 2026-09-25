@@ -39,12 +39,17 @@ The published Storybook must include a components manifest:
 
 | Env var | Required | Description |
 |---|---|---|
-| `STORYBOOK_URL` | Yes | Root URL of the published Storybook, e.g. `https://design.example.com`. A link to `index.html` or with `?path=...` also works. |
-| `STORYBOOK_AUTH_HEADER` | No | Header(s) sent when fetching manifests from a private Storybook. `Name: value`, several separated by newlines or a literal `\n`. A value without a header name (`Bearer abc`) is sent as `Authorization`. |
+| `STORYBOOK_URL` | Yes | Root URL of the published Storybook, e.g. `https://design.example.com`. A link to `index.html?path=...` or `iframe.html?id=...` also works. Must not contain a username or password; use `STORYBOOK_AUTH_HEADER` instead. |
+| `STORYBOOK_AUTH_HEADER` | No | Header(s) sent when fetching manifests from a private Storybook. `Name: value`, several separated by newlines or a literal `\n`. A line with a scheme and credentials and no header name (`Bearer abc`, `Basic dXNlcjpwYXNz`) is sent as `Authorization`. Any other line stops the server at startup. |
 
 The server ignores `$PORT` and the per-request `Authorization` header; all access to the Storybook uses
-the settings above. Manifests are cached for 60 seconds, and the last good copy is served if the Storybook
-host has a transient error. Absolute build-machine paths (`definedInFile`) are removed from manifests.
+the settings above. Redirects are followed only within the Storybook's origin, so the auth header never goes
+to another host. Absolute build-machine paths (`definedInFile`) are removed from manifests.
+
+Manifests are cached for 60 seconds, and concurrent requests for the same file share one fetch. If the
+Storybook host is down (network error, timeout, 5xx), the last good copy is served and the host is retried
+after 30 seconds, so tool calls don't each wait on it. Other failures, such as a missing file, are also
+remembered for 30 seconds.
 
 ## Run
 
@@ -64,7 +69,7 @@ Health check: `GET /health` (or `/healthz`).
 
 ```bash
 npm ci
-npm test        # builds, then runs the handler against a fake Storybook host (test/fixtures)
+npm test        # builds, then runs the tests against a fake Storybook host (test/fixtures) and a stubbed fetch
 STORYBOOK_URL=http://localhost:6006 npm start
 ```
 

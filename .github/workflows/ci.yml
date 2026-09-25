@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm test
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Builds the linux/amd64 image the MintMCP runtime uses; publishing stays manual.
+      - run: docker build -t storybook-mcp:ci .
+      - name: Smoke test
+        run: |
+          docker run --rm storybook-mcp:ci > missing-env.log 2>&1 && exit 1 || true
+          grep -q "STORYBOOK_URL is required" missing-env.log
+          docker run -d --name sb -p 8000:8000 -e STORYBOOK_URL=https://example.invalid storybook-mcp:ci
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8000/health && break; sleep 1; done
+          curl -sf http://127.0.0.1:8000/health
+          docker rm -f sb

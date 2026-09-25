@@ -1,0 +1,32 @@
+{
+  "components": {
+    "example-button": {
+      "id": "example-button",
+      "name": "Button",
+      "path": "./src/stories/Button.stories.ts",
+      "import": "import { Button } from 'storybook-manifest-check';\nimport { fn } from 'storybook/test';",
+      "stories": {
+        "example-button--primary": {
+          "id": "example-button--primary",
+          "name": "Primary",
+          "snippet": "const Primary = () => <Button onClick={fn()} primary label=\"Button\" />;"
+        },
+        "example-button--secondary": {
+          "id": "example-button--secondary",
+          "name": "Secondary",
+          "snippet": "const Secondary = () => <Button onClick={fn()} label=\"Button\" />;"
+        },
+        "example-button--large": {
+          "id": "example-button--large",
+          "name": "Large",
+          "snippet": "const Large = () => <Button onClick={fn()} size=\"large\" label=\"Button\" />;"
+        },
+        "example-button--small": {
+          "id": "example-button--small",
+          "name": "Small",
+          "snippet": "const Small = () => <Button onClick={fn()} size=\"small\" label=\"Button\" />;"
+        }
+      }
+    }
+  }
+}

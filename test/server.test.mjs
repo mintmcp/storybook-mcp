@@ -3,7 +3,7 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createStorybookMcpHandler } from "@storybook/mcp";
 import { loadConfig, parseAuthHeader } from "../dist/config.js";
 import { createManifestProvider } from "../dist/manifests.js";
@@ -41,6 +41,12 @@ before(async () => {
     if (scenario === "leak") {
       leakedHeaders.push(req.headers["x-sb-token"]);
       return json(COMPONENTS);
+    }
+    if (scenario === "refs") {
+      // Ref-layout build (features.experimentalDocgenServer) published under a subpath: /refs/ui/...
+      const [sub, ...file] = rest;
+      const fileUrl = new URL(`./fixtures/refs/${file.join("/")}`, import.meta.url);
+      if (sub === "ui" && !file.includes("..") && existsSync(fileUrl)) return json(readFileSync(fileUrl, "utf8"));
     }
     if (scenario === "loginpage") {
       return res.writeHead(200, { "content-type": "text/html" }).end("<html>Sign in</html>");
@@ -125,6 +131,17 @@ test("HTML instead of JSON: points at URL or auth", async () => {
   assert.match(res.text, /did not return JSON/);
 });
 
+test("ref-layout manifests under a subpath: docs-list and docs-show resolve $refs", async () => {
+  const env = { STORYBOOK_URL: `${base}/refs/ui/index.html` };
+  const list = await callTool(env, "docs-list");
+  assert.equal(list.isError, false, list.text);
+  assert.match(list.text, /Button \(example-button\)/);
+  const show = await callTool(env, "docs-show", { id: "example-button" });
+  assert.equal(show.isError, false, show.text);
+  assert.match(show.text, /example-button--primary/);
+  assert.match(show.text, /label: string/);
+});
+
 test("config parsing", () => {
   assert.throws(() => loadConfig({}), /STORYBOOK_URL is required/);
   assert.throws(() => loadConfig({ STORYBOOK_URL: "ftp://x" }), /http\(s\)/);
@@ -135,4 +152,22 @@ test("config parsing", () => {
     "CF-Access-Client-Secret": "b",
   });
   assert.deepEqual(parseAuthHeader(undefined), {});
+  assert.equal(loadConfig({ STORYBOOK_URL: "https://sb.example.com/iframe.html?id=x--y&viewMode=story" }).storybookUrl, "https://sb.example.com");
+});
+
+test("credentials in STORYBOOK_URL are rejected without echoing them", () => {
+  assert.throws(
+    () => loadConfig({ STORYBOOK_URL: "https://user:hunter2@sb.example.com/ui" }),
+    (err) => /STORYBOOK_AUTH_HEADER/.test(err.message) && !/hunter2/.test(err.message),
+  );
+  assert.throws(
+    () => loadConfig({ STORYBOOK_URL: "https://user:hunter2@" }),
+    (err) => !/hunter2/.test(err.message),
+  );
+});
+
+test("STORYBOOK_AUTH_HEADER lines that aren't a header or scheme + credentials are rejected", () => {
+  assert.throws(() => parseAuthHeader("X Token: s3cret"), (err) => /line 1/.test(err.message) && !/s3cret/.test(err.message));
+  assert.throws(() => parseAuthHeader("Referer: ok\\njusttoken"), /line 2/);
+  assert.deepEqual(parseAuthHeader("Basic dXNlcjpwYXNz"), { Authorization: "Basic dXNlcjpwYXNz" });
 });
