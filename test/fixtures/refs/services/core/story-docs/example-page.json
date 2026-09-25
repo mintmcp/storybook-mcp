@@ -1,0 +1,22 @@
+{
+  "components": {
+    "example-page": {
+      "id": "example-page",
+      "name": "Page",
+      "path": "./src/stories/Page.stories.ts",
+      "import": "import { Page } from 'storybook-manifest-check';",
+      "stories": {
+        "example-page--logged-out": {
+          "id": "example-page--logged-out",
+          "name": "Logged Out",
+          "snippet": "const LoggedOut = () => <Page />;"
+        },
+        "example-page--logged-in": {
+          "id": "example-page--logged-in",
+          "name": "Logged In",
+          "snippet": "const LoggedIn = () => <Page />;"
+        }
+      }
+    }
+  }
+}

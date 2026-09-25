@@ -1,0 +1,153 @@
+{
+  "components": {
+    "example-header": {
+      "id": "example-header",
+      "name": "Header",
+      "path": "./src/stories/Header.stories.ts",
+      "jsDocTags": {},
+      "reactComponentMeta": {
+        "displayName": "Header",
+        "exportName": "Header",
+        "filePath": "/build/agent/work/design-system/src/stories/Header.tsx",
+        "description": "",
+        "jsDocTags": {},
+        "props": {
+          "user": {
+            "name": "user",
+            "required": false,
+            "type": {
+              "name": "User"
+            },
+            "description": "",
+            "defaultValue": null,
+            "parent": {
+              "name": "HeaderProps",
+              "fileName": "src/stories/Header.tsx"
+            },
+            "declarations": [
+              {
+                "name": "HeaderProps",
+                "fileName": "src/stories/Header.tsx"
+              }
+            ]
+          },
+          "onLogin": {
+            "name": "onLogin",
+            "required": false,
+            "type": {
+              "name": "() => void"
+            },
+            "description": "",
+            "defaultValue": null,
+            "parent": {
+              "name": "HeaderProps",
+              "fileName": "src/stories/Header.tsx"
+            },
+            "declarations": [
+              {
+                "name": "HeaderProps",
+                "fileName": "src/stories/Header.tsx"
+              }
+            ]
+          },
+          "onLogout": {
+            "name": "onLogout",
+            "required": false,
+            "type": {
+              "name": "() => void"
+            },
+            "description": "",
+            "defaultValue": null,
+            "parent": {
+              "name": "HeaderProps",
+              "fileName": "src/stories/Header.tsx"
+            },
+            "declarations": [
+              {
+                "name": "HeaderProps",
+                "fileName": "src/stories/Header.tsx"
+              }
+            ]
+          },
+          "onCreateAccount": {
+            "name": "onCreateAccount",
+            "required": false,
+            "type": {
+              "name": "() => void"
+            },
+            "description": "",
+            "defaultValue": null,
+            "parent": {
+              "name": "HeaderProps",
+              "fileName": "src/stories/Header.tsx"
+            },
+            "declarations": [
+              {
+                "name": "HeaderProps",
+                "fileName": "src/stories/Header.tsx"
+              }
+            ]
+          }
+        }
+      },
+      "argTypes": {
+        "user": {
+          "name": "user",
+          "description": "",
+          "type": {
+            "required": false,
+            "name": "other",
+            "value": "User"
+          },
+          "table": {
+            "type": {
+              "summary": "User"
+            }
+          }
+        },
+        "onLogin": {
+          "name": "onLogin",
+          "description": "",
+          "type": {
+            "required": false,
+            "name": "function",
+            "value": "() => void"
+          },
+          "table": {
+            "type": {
+              "summary": "() => void"
+            }
+          }
+        },
+        "onLogout": {
+          "name": "onLogout",
+          "description": "",
+          "type": {
+            "required": false,
+            "name": "function",
+            "value": "() => void"
+          },
+          "table": {
+            "type": {
+              "summary": "() => void"
+            }
+          }
+        },
+        "onCreateAccount": {
+          "name": "onCreateAccount",
+          "description": "",
+          "type": {
+            "required": false,
+            "name": "function",
+            "value": "() => void"
+          },
+          "table": {
+            "type": {
+              "summary": "() => void"
+            }
+          }
+        }
+      }
+    }
+  }
+}

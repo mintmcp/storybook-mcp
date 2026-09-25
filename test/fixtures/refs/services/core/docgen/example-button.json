@@ -1,0 +1,211 @@
+{
+  "components": {
+    "example-button": {
+      "id": "example-button",
+      "name": "Button",
+      "path": "./src/stories/Button.stories.ts",
+      "jsDocTags": {},
+      "description": "Primary UI component for user interaction",
+      "reactComponentMeta": {
+        "displayName": "Button",
+        "exportName": "Button",
+        "filePath": "/build/agent/work/design-system/src/stories/Button.tsx",
+        "description": "Primary UI component for user interaction",
+        "jsDocTags": {},
+        "props": {
+          "primary": {
+            "name": "primary",
+            "required": false,
+            "type": {
+              "name": "boolean"
+            },
+            "description": "Is this the principal call to action on the page?",
+            "defaultValue": {
+              "value": "false"
+            },
+            "parent": {
+              "name": "ButtonProps",
+              "fileName": "src/stories/Button.tsx"
+            },
+            "declarations": [
+              {
+                "name": "ButtonProps",
+                "fileName": "src/stories/Button.tsx"
+              }
+            ]
+          },
+          "backgroundColor": {
+            "name": "backgroundColor",
+            "required": false,
+            "type": {
+              "name": "string"
+            },
+            "description": "What background color to use",
+            "defaultValue": null,
+            "parent": {
+              "name": "ButtonProps",
+              "fileName": "src/stories/Button.tsx"
+            },
+            "declarations": [
+              {
+                "name": "ButtonProps",
+                "fileName": "src/stories/Button.tsx"
+              }
+            ]
+          },
+          "size": {
+            "name": "size",
+            "required": false,
+            "type": {
+              "name": "enum",
+              "raw": "\"small\" | \"medium\" | \"large\"",
+              "value": [
+                {
+                  "value": "\"small\""
+                },
+                {
+                  "value": "\"medium\""
+                },
+                {
+                  "value": "\"large\""
+                }
+              ]
+            },
+            "description": "How large should the button be?",
+            "defaultValue": {
+              "value": "'medium'"
+            },
+            "parent": {
+              "name": "ButtonProps",
+              "fileName": "src/stories/Button.tsx"
+            },
+            "declarations": [
+              {
+                "name": "ButtonProps",
+                "fileName": "src/stories/Button.tsx"
+              }
+            ]
+          },
+          "label": {
+            "name": "label",
+            "required": true,
+            "type": {
+              "name": "string"
+            },
+            "description": "Button contents",
+            "defaultValue": null,
+            "parent": {
+              "name": "ButtonProps",
+              "fileName": "src/stories/Button.tsx"
+            },
+            "declarations": [
+              {
+                "name": "ButtonProps",
+                "fileName": "src/stories/Button.tsx"
+              }
+            ]
+          },
+          "onClick": {
+            "name": "onClick",
+            "required": false,
+            "type": {
+              "name": "() => void"
+            },
+            "description": "Optional click handler",
+            "defaultValue": null,
+            "parent": {
+              "name": "ButtonProps",
+              "fileName": "src/stories/Button.tsx"
+            },
+            "declarations": [
+              {
+                "name": "ButtonProps",
+                "fileName": "src/stories/Button.tsx"
+              }
+            ]
+          }
+        }
+      },
+      "argTypes": {
+        "primary": {
+          "name": "primary",
+          "description": "Is this the principal call to action on the page?",
+          "type": {
+            "required": false,
+            "name": "boolean"
+          },
+          "table": {
+            "type": {
+              "summary": "boolean"
+            },
+            "defaultValue": {
+              "summary": "false"
+            }
+          }
+        },
+        "backgroundColor": {
+          "name": "backgroundColor",
+          "description": "What background color to use",
+          "type": {
+            "required": false,
+            "name": "string"
+          },
+          "table": {
+            "type": {
+              "summary": "string"
+            }
+          }
+        },
+        "size": {
+          "name": "size",
+          "description": "How large should the button be?",
+          "type": {
+            "required": false,
+            "raw": "\"small\" | \"medium\" | \"large\"",
+            "name": "enum",
+            "value": [
+              "small",
+              "medium",
+              "large"
+            ]
+          },
+          "table": {
+            "type": {
+              "summary": "\"small\" | \"medium\" | \"large\""
+            },
+            "defaultValue": {
+              "summary": "\"'medium'\""
+            }
+          }
+        },
+        "label": {
+          "name": "label",
+          "description": "Button contents",
+          "type": {
+            "required": true,
+            "name": "string"
+          },
+          "table": {
+            "type": {
+              "summary": "string"
+            }
+          }
+        },
+        "onClick": {
+          "name": "onClick",
+          "description": "Optional click handler",
+          "type": {
+            "required": false,
+            "name": "function",
+            "value": "() => void"
+          },
+          "table": {
+            "type": {
+              "summary": "() => void"
+            }
+          }
+        }
+      }
+    }
+  }
+}
