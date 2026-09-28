@@ -1,0 +1,13 @@
+{
+  "v": 1,
+  "docs": {
+    "configure-your-project--docs": {
+      "id": "configure-your-project--docs",
+      "name": "Docs",
+      "mdx": {
+        "$ref": "../services/addon-docs/mdx/configure-your-project--docs.json#/components/configure-your-project--docs/docs/configure-your-project--docs"
+      },
+      "summary": "export const RightArrow = () => # Configure your project Because Storybook works separatel..."
+    }
+  }
+}

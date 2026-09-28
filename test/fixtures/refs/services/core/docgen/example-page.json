@@ -1,0 +1,19 @@
+{
+  "components": {
+    "example-page": {
+      "id": "example-page",
+      "name": "Page",
+      "path": "./src/stories/Page.stories.ts",
+      "jsDocTags": {},
+      "reactComponentMeta": {
+        "displayName": "Page",
+        "exportName": "Page",
+        "filePath": "/build/agent/work/design-system/src/stories/Page.tsx",
+        "description": "",
+        "jsDocTags": {},
+        "props": {}
+      },
+      "argTypes": {}
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "v": 1,
+  "components": {
+    "example-button": {
+      "id": "example-button",
+      "name": "Button",
+      "description": "Primary UI component for user interaction",
+      "docgen": {
+        "$ref": "../services/core/docgen/example-button.json#/components/example-button"
+      },
+      "stories": {
+        "$ref": "../services/core/story-docs/example-button.json#/components/example-button"
+      }
+    },
+    "example-header": {
+      "id": "example-header",
+      "name": "Header",
+      "docgen": {
+        "$ref": "../services/core/docgen/example-header.json#/components/example-header"
+      },
+      "stories": {
+        "$ref": "../services/core/story-docs/example-header.json#/components/example-header"
+      }
+    },
+    "example-page": {
+      "id": "example-page",
+      "name": "Page",
+      "docgen": {
+        "$ref": "../services/core/docgen/example-page.json#/components/example-page"
+      },
+      "stories": {
+        "$ref": "../services/core/story-docs/example-page.json#/components/example-page"
+      }
+    }
+  },
+  "meta": {
+    "docgen": "react-component-meta",
+    "durationMs": 0
+  }
+}

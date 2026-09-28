@@ -1,0 +1,23 @@
+{
+  "name": "storybook-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hosted Storybook docs MCP server for MintMCP, serving a published Storybook's component manifest via @storybook/mcp",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "npm run build && node --test 'test/*.test.mjs'"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@storybook/mcp": "10.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.6",
+    "typescript": "~5.9.3"
+  }
+}
